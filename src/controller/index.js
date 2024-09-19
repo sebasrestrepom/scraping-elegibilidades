@@ -2,7 +2,7 @@ const { findPatiensForToday, ProcessPatient } = require('../service');
 const { sendMail } = require('../utils/utils');
 
 const patients = [
-    {
+/*     {
         "document": 111279271500,
         "nombre": "Juan Perez",
         "fecha_nacimiento": "1990-01-01",
@@ -15,26 +15,33 @@ const patients = [
         "fecha_nacimiento": "1985-05-12",
         "telefono": "444-4444",
         "eps": "intermedpr"
-    },
-    {
+    }, */
+    /* {
         "document": 111279271500,
         "nombre": "Pedro Sanchez",
         "fecha_nacimiento": "1982-10-20",
         "telefono": "333-3333",
-        "eps": "provinet"
-    },
+        "eps": "innova"
+    }, */
     {
+        "document": "0080006307316",
+        "nombre": "Pedro Sanchez",
+        "fecha_nacimiento": "1982-10-20",
+        "telefono": "333-3333",
+        "eps": "firstMedical"
+    },
+    /* {
         "document": 111279271500,
         "nombre": "Ana Rodriguez",
         "fecha_nacimiento": "1995-02-28",
         "telefono": "222-2222",
         "eps": "intermedpr"
-    }
+    } */
 ];
 
 const startProcess = async () => {
     //1. se consulta la data✅
-    //const patientes = await findPatiensForToday();
+    //const patients = await findPatiensForToday();
 
     //2. se individualiza✅
     //3. se llama a cada pagina que pertenezca para hacer la elegibilidad✅

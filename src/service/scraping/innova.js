@@ -2,9 +2,8 @@ require('dotenv').config();
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
-const { sendMail } = require('../../utils/utils');
 
-const { USER_INNOVAMD, PASSWORD_INNOVAMD, INNOVAMD_URL, INNOVAMD_CHILHOOD_QUESTION, INNOVAMD_PET_QUESTION, INNOVAMD_CAR_QUESTION } = process.env;
+const { USER_INNOVAMD, PASSWORD_INNOVAMD, INNOVAMD_URL, INNOVAMD_SECURITY_QUESTION } = process.env;
 
 const innovaScraping = async (document) => {
     const browser = await puppeteer.launch({ headless: false });
@@ -20,10 +19,7 @@ const innovaScraping = async (document) => {
         page.click('#login-button')
     ]);
 
-    const element = await page.$('#answer-label');
-    const text = await page.evaluate(element => element.textContent, element);
-
-    const securityQuestion = text == 'What was your childhood nickname?' ? INNOVAMD_CHILHOOD_QUESTION : text == 'Favorite pet name?' ? INNOVAMD_PET_QUESTION : INNOVAMD_CAR_QUESTION;
+    const securityQuestion = INNOVAMD_SECURITY_QUESTION;
 
     await page.type('#Answer', securityQuestion);
 

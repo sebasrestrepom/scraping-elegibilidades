@@ -25,7 +25,7 @@ const sendMail = () => {
 
     let mailOptions = {
         from: "sebasrestrepom@gmail.com",
-        to: "parra.fc@gmail.com",
+        to: "sebasrestrepom@gmail.com",
         subject: "Elegibilidad diaria completada ✅",
         priority: "high",
         html: `

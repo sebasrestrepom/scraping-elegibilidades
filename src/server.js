@@ -13,7 +13,7 @@ app.listen(PORT, () => {
 
 //*/1 * * * *
 
-cron.schedule('30 0 * * *', () => {
+cron.schedule('*/1 * * * *', () => {
     console.log('Initiating the daily eligibility process');
     exec('node src/controller', (error, stdout, stderr) => {
         if (error) {

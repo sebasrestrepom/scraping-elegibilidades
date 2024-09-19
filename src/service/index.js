@@ -2,6 +2,7 @@ const { findPatients } = require('../repository');
 const { innovaScraping } = require('./scraping/innova');
 const { intermedprScraping } = require('./scraping/intermedpr');
 const { provinetScraping } = require('./scraping/provinet');
+const { firstMedicalScraping } = require('./scraping/first-medical')
 
 const findPatiensForToday = () => {
     const patient = findPatients();
@@ -28,6 +29,10 @@ const ProcessPatient = async (patients) => {
 
         if (patient.eps === 'provinet') {
             await provinetScraping(patient.document);
+        }
+
+        if (patient.eps === 'firstMedical') {
+            await firstMedicalScraping(patient.document);
         }
     }
 }
