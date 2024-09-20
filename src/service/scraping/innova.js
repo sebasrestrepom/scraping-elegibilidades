@@ -8,6 +8,7 @@ const { USER_INNOVAMD, PASSWORD_INNOVAMD, INNOVAMD_URL, INNOVAMD_SECURITY_QUESTI
 const innovaScraping = async (document) => {
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 1080 });
 
     await page.goto(INNOVAMD_URL);
 
@@ -28,9 +29,19 @@ const innovaScraping = async (document) => {
         page.click('#submit-button')
     ]);
 
-    await page.waitForSelector('body > div.wrapper.ng-scope > header > nav > div.navbar-collapse.collapse > ul.nav.navbar-nav.ng-scope > li:nth-child(1) > ul > li:nth-child(2) > a > span');
+    await page.waitForSelector('.onboarding-modal', { visible: true, timeout: 40000 });
 
-    const elegibilityButton = await page.$('body > div.wrapper.ng-scope > header > nav > div.navbar-collapse.collapse > ul.nav.navbar-nav.ng-scope > li:nth-child(1) > ul > li:nth-child(2) > a > span');
+    await page.waitForFunction(() => {
+        const modal = document.querySelector('.onboarding-modal');
+        const button = document.querySelector('#onboardingmodal-skip');
+        return getComputedStyle(modal).opacity === '1' && getComputedStyle(button).pointerEvents !== 'none';
+    }, { timeout: 10000 });
+
+    await page.click('#onboardingmodal-skip');
+
+    await page.waitForSelector('body > div.wrapper.ng-scope > header > nav > div.navbar-collapse.collapse > ul.nav.navbar-nav.ng-scope > li:nth-child(1) > ul > li > a > span');
+
+    const elegibilityButton = await page.$('body > div.wrapper.ng-scope > header > nav > div.navbar-collapse.collapse > ul.nav.navbar-nav.ng-scope > li:nth-child(1) > ul > li > a > span');
 
     await page.evaluate(elegibilityButton => {
         elegibilityButton.click();
@@ -42,10 +53,13 @@ const innovaScraping = async (document) => {
 
     await page.click('body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div > form > div > div > button');
 
-    const result = await page.$('body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div > div > h4');
-    const textResult = await page.evaluate(result => result.textContent, result);
+    await page.waitForSelector('body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div > div.panel.panel-default.ng-scope > div > div > div.media-body.allow-overflow > div > div.col-xs-6.col-sm-2.col-lg-2.col-sm-text-right > h3', { visible: true, timeout: 3000 });
 
-    console.log('este es el result', textResult);
+    const result = await page.$('body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div > div.panel.panel-default.ng-scope > div > div > div.media-body.allow-overflow > div > div.col-xs-6.col-sm-2.col-lg-2.col-sm-text-right > h3');
+
+    const textResult = await page.evaluate(result => result.textContent.trim(), result);
+
+    console.log('Resultado:', textResult);
 
     const today = new Date();
     const year = today.getFullYear();
@@ -66,11 +80,11 @@ const innovaScraping = async (document) => {
         fs.mkdirSync(dayFolder);
     }
 
-    await page.waitForSelector('body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div > div > h4');
+    await page.waitForSelector('body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div > div.panel.panel-default.ng-scope > div > div > div.media-body.allow-overflow > div > div.col-xs-6.col-sm-2.col-lg-2.col-sm-text-right > h3', { visible: true });
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    await page.screenshot({ path: path.join(dayFolder, 'innova.png') });
+    await page.screenshot({ path: path.join(dayFolder, `${document}.png`) });
 
     await browser.close();
 

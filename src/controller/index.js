@@ -2,34 +2,34 @@ const { findPatiensForToday, ProcessPatient } = require('../service');
 const { sendMail } = require('../utils/utils');
 
 const patients = [
-/*     {
-        "document": 111279271500,
+    /* {
+        "document": 232743508,
         "nombre": "Juan Perez",
         "fecha_nacimiento": "1990-01-01",
         "telefono": "555-5555",
         "eps": "provinet"
-    },
-    {
+    }, */
+    /*{
         "document": 111279271500,
         "nombre": "Maria Garcia",
         "fecha_nacimiento": "1985-05-12",
         "telefono": "444-4444",
         "eps": "intermedpr"
     }, */
-    /* {
-        "document": 111279271500,
+    {
+        "document": "030335301",
         "nombre": "Pedro Sanchez",
         "fecha_nacimiento": "1982-10-20",
         "telefono": "333-3333",
         "eps": "innova"
-    }, */
-    {
+    },
+    /* {
         "document": "0080006307316",
         "nombre": "Pedro Sanchez",
         "fecha_nacimiento": "1982-10-20",
         "telefono": "333-3333",
         "eps": "firstMedical"
-    },
+    }, */
     /* {
         "document": 111279271500,
         "nombre": "Ana Rodriguez",
@@ -51,7 +51,7 @@ const startProcess = async () => {
     //5. se consulta los resultados del día para informe ⛔
 
     //6. se envia el email con el reporte diario✅
-    sendMail();
+    //sendMail();
 
 
 };

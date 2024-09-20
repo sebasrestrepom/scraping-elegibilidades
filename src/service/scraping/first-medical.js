@@ -11,47 +11,37 @@ const firstMedicalScraping = async (patient) => {
 
     await page.setViewport({ width: 1920, height: 1080 });
 
-    // Ignorar los errores no críticos de la página
     page.on('pageerror', err => {
         console.log(`Page error: ${err.toString()}`);
     });
 
-    // Navegar a la página
     await page.goto(FIRST_MEDICAL_URL, { waitUntil: 'networkidle2' });
     console.log('Navigated to the URL');
 
-    // 1. Esperar a que el campo de correo esté visible y escribir el correo
     await page.waitForSelector('#username', { visible: true });
     await page.type('#username', FIRST_MEDICAL_USER_EMAIL, { delay: 100 });
     console.log('Typed email slowly');
 
-    // 2. Oprimir el botón de "Sign in"
     await page.click('#accessBtn');
     console.log('Clicked sign in button');
 
-    // 3. Esperar a que aparezca el campo de contraseña y escribir la contraseña
     await page.waitForSelector('#pwd', { visible: true });
     await page.type('#pwd', FIRST_MEDICAL_USER_PASSWORD, { delay: 100 });
     console.log('Typed password slowly');
 
-    // 4. Oprimir el botón de "Sign in" nuevamente
     await page.click('#accessBtn');
     console.log('Clicked sign in button after typing password');
 
-    // 5. Asegurar que el valor de patient cumple con las validaciones
     if (typeof patient !== 'string') {
-        patient = String(patient);  // Convertir a cadena si no lo es
+        patient = String(patient);
     }
 
-    // 6. Esperar a que el campo #txtContract esté disponible y escribir el valor lentamente
     await page.waitForSelector('#txtContract', { visible: true });
     await page.type('#txtContract', patient, { delay: 250 });
     console.log(`Typed patient value slowly: ${patient}`);
 
-    // 7. Esperar un breve tiempo para que la validación se procese
     await page.waitForTimeout(1000);
 
-    // 8. Intentar hacer clic en el botón de envío
     await page.click('#btnEligSubmit');
     console.log('Clicked submit button directly');
 

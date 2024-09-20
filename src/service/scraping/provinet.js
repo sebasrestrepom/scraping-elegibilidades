@@ -47,7 +47,7 @@ const provinetScraping = async (document) => {
 
     await page.waitForSelector('#DataGridTable_wrapper');
 
-    const result = await page.$('#DataGridTable > tbody > tr > td');
+    const result = await page.$('#DataGridTable > tbody > tr > td:nth-child(5)');
     const textResult = await page.evaluate(result => result.textContent, result);
 
     console.log('este es el result', textResult);
@@ -84,9 +84,7 @@ const provinetScraping = async (document) => {
         });
     });
 
-    const name = 'SRM2386';
-
-    await page.screenshot({ path: path.join(dayFolder, `${name}.png`) });
+    await page.screenshot({ path: path.join(dayFolder, `${document}.png`) });
 
     await browser.close();
 };
