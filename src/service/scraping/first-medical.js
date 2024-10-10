@@ -16,21 +16,16 @@ const firstMedicalScraping = async (patient) => {
     });
 
     await page.goto(FIRST_MEDICAL_URL, { waitUntil: 'networkidle2' });
-    console.log('Navigated to the URL');
 
     await page.waitForSelector('#username', { visible: true });
     await page.type('#username', FIRST_MEDICAL_USER_EMAIL, { delay: 100 });
-    console.log('Typed email slowly');
 
     await page.click('#accessBtn');
-    console.log('Clicked sign in button');
 
     await page.waitForSelector('#pwd', { visible: true });
     await page.type('#pwd', FIRST_MEDICAL_USER_PASSWORD, { delay: 100 });
-    console.log('Typed password slowly');
 
     await page.click('#accessBtn');
-    console.log('Clicked sign in button after typing password');
 
     if (typeof patient !== 'string') {
         patient = String(patient);
@@ -38,12 +33,10 @@ const firstMedicalScraping = async (patient) => {
 
     await page.waitForSelector('#txtContract', { visible: true });
     await page.type('#txtContract', patient, { delay: 250 });
-    console.log(`Typed patient value slowly: ${patient}`);
 
     await page.waitForTimeout(1000);
 
     await page.click('#btnEligSubmit');
-    console.log('Clicked submit button directly');
 
     await page.waitForSelector('.message strong');
     const result = await page.evaluate(() => {

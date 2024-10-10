@@ -13,9 +13,9 @@ app.listen(PORT, () => {
 
 //*/1 * * * *
 
-cron.schedule('*/1 * * * *', () => {
+cron.schedule('* * * * *', () => {
     console.log('Initiating the daily eligibility process');
-    exec('node src/controller', (error, stdout, stderr) => {
+    exec('node src/controller/check-patient-eligibility.controller', (error, stdout, stderr) => {
         if (error) {
             console.error(`Error executing the process: ${error}`);
             return;
