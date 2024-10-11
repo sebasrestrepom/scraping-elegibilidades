@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
 const cron = require('node-cron');
 
 const { PORT } = process.env;
@@ -11,16 +11,20 @@ app.listen(PORT, () => {
     console.log(`The server is running on port ${PORT}`);
 });
 
-//*/1 * * * *
-
 cron.schedule('* * * * *', () => {
     console.log('Initiating the daily eligibility process');
-    exec('node src/controller/check-patient-eligibility.controller', (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Error executing the process: ${error}`);
-            return;
-        }
-        console.log(`stdout: ${stdout}`);
-        console.error(`stderr: ${stderr}`);
+
+    const process = spawn('node', ['src/controller/check-patient-eligibility.controller']);
+
+    process.stdout.on('data', (data) => {
+        console.log(`stdout: ${data.toString()}`);
+    });
+
+    process.stderr.on('data', (data) => {
+        console.error(`stderr: ${data.toString()}`);
+    });
+
+    process.on('close', (code) => {
+        console.log(`Process exited with code ${code}`);
     });
 });
