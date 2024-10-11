@@ -23,10 +23,6 @@ const checkAndProcessPatientEligibility = async () => {
     scrapeEligibilityResult
   );
 
-  // NOTAS: organizar manera de mandar a guardar las imagenes en las carpetas, deberia ser un util
-  // NOTAS: las fotos deben subirse a DRIVE para que se puedan ver
-  // NOTAS: validar si falla una elegibilidad si se reintenta 3 veces
-
   const { activePatients, failedPatients } = scrapeEligibilityResult;
 
   const reportHTML = generateReportHTML(activePatients, failedPatients);
@@ -77,7 +73,12 @@ const scrapeEligibilityForPatients = async (appointmentsForToday) => {
         }
 
         if (result.status === "Activo") {
-          activePatients.push({ ...patient, status: result.status });
+          const patientData = {
+            ...patient,
+            status: result.status,
+            urlImage: result.driveUrl || null,
+          };
+          activePatients.push(patientData);
           console.log(`Patient ${patient.PatientName} is active.`);
         } else {
           failedPatients.push({ ...patient, status: result.status });

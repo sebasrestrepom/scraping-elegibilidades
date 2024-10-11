@@ -109,7 +109,7 @@ const innovaScraping = async (document) => {
       if (driveFile) {
         const driveUrl = driveFile.webViewLink;
         console.log(`Archivo subido a Google Drive: ${driveUrl}`);
-        // Aquí puedes agregar la URL al usuario en tu base de datos o sistema.
+        return { document, status, driveUrl };
       }
     }
   } catch (error) {
