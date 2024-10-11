@@ -11,7 +11,7 @@ app.listen(PORT, () => {
     console.log(`The server is running on port ${PORT}`);
 });
 
-cron.schedule('* * * * *', () => {
+cron.schedule('30 0 * * *', () => {
     console.log('Initiating the daily eligibility process');
 
     const process = spawn('node', ['src/controller/check-patient-eligibility.controller']);
