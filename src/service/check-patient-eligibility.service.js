@@ -1,4 +1,4 @@
-const { findAppointmentsForTomorrow } = require('../repository/find-appointments-for-tomorrow.repository');
+const { findAppointmentsForToday } = require('../repository/find-appointments-for-today.repository');
 const { innovaScraping } = require('./scraping/innova');
 const { provinetScraping } = require('./scraping/provinet');
 const { triplesScraping } = require('./scraping/triples')
@@ -6,15 +6,15 @@ const { triplesScraping } = require('./scraping/triples')
 const checkAndProcessPatientEligibility = async () => {
 // 1. consulta los pacientes
 
-const appointmentsForTomorrow = await findAppointmentsForTomorrow();
+const appointmentsForToday = await findAppointmentsForToday();
 
-if (!appointmentsForTomorrow) {
-    return 'No appointments scheduled for tomorrow';;
+if (!appointmentsForToday) {
+    return 'No appointments scheduled for today';;
 }
 
 // 2. se individualiza cada paciente para empezar a procesarse uno por uno y llamar a cada pagina que pertenezca para hacer la elegibilidad
 
-const scrapeEligibilityResult = await scrapeEligibilityForPatients(appointmentsForTomorrow);
+const scrapeEligibilityResult = await scrapeEligibilityForPatients(appointmentsForToday);
 
 console.log('reporte final para mandar correo o mandar a armar correo:', scrapeEligibilityResult)
 
@@ -30,7 +30,7 @@ console.log('reporte final para mandar correo o mandar a armar correo:', scrapeE
 }
 
 
-const scrapeEligibilityForPatients = async (appointmentsForTomorrow) => {
+const scrapeEligibilityForPatients = async (appointmentsForToday) => {
     console.log('Inicia proceso de selector de scraping');
 
     const scrapingServices = {
@@ -44,15 +44,15 @@ const scrapeEligibilityForPatients = async (appointmentsForTomorrow) => {
         'V-SSS': triplesScraping
     };
 
-    const totalPatients = appointmentsForTomorrow.length;
+    const totalPatients = appointmentsForToday.length;
     let processedPatients = 0;
 
     const activePatients = [];
     const failedPatients = [];
 
-    for (const patient of appointmentsForTomorrow) {
+    for (const patient of appointmentsForToday) {
         processedPatients++;
-        console.log(`Processing patient ${processedPatients} of ${totalPatients}: ${patient.PatientFirstName} ${patient.PatientLastName} with MedicalPlanNumber: ${patient.MedicalPlanNumber} and InsuranceNumber: ${patient.InsuranceNumber} and InsuranceName: ${patient.InsuranceName}`);
+        console.log(`Processing patient ${processedPatients} of ${totalPatients}: ${patient.PatientName} with ContractNumber: ${patient.ContractNumber} and InsuranceNumber: ${patient.InsuranceNumber} and InsuranceName: ${patient.InsuranceName}`);
 
         const scrapingFunction = scrapingServices[patient.InsuranceNumber];
 
@@ -60,32 +60,32 @@ const scrapeEligibilityForPatients = async (appointmentsForTomorrow) => {
             try {
                 let result;
                 if (scrapingFunction === triplesScraping) {
-                    result = await triplesScraping(patient.MedicalPlanNumber, patient.InsuranceNumber);
+                    result = await triplesScraping(patient.ContractNumber, patient.InsuranceNumber);
                 } else {
-                    result = await scrapingFunction(patient.MedicalPlanNumber);
+                    result = await scrapingFunction(patient.ContractNumber);
                 }
 
                 if (result.status === 'Activo') {
                     activePatients.push({ ...patient, status: result.status });
-                    console.log(`Patient ${patient.PatientFirstName} ${patient.PatientLastName} is active.`);
+                    console.log(`Patient ${patient.PatientName} is active.`);
                 } else {
                     failedPatients.push({ ...patient, status: result.status });
-                    console.log(`Patient ${patient.PatientFirstName} ${patient.PatientLastName} is not eligible.`);
+                    console.log(`Patient ${patient.PatientName} is not eligible.`);
                 }
             } catch (error) {
                 console.error(`Error processing patient ${processedPatients} of ${totalPatients}:`, error);
                 failedPatients.push({ ...patient, status: 'Error', error: error.message });
             }
         } else {
-            console.log(`No scraping service found for patient: ${patient.PatientFirstName} ${patient.PatientLastName}`);
+            console.log(`No scraping service found for patient: ${patient.PatientName}`);
             failedPatients.push({ ...patient, status: 'No service found' });
         }
 
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
-    const activePatientIds = new Set(activePatients.map(patient => patient.nPatientId));
-    const filteredFailedPatients = failedPatients.filter(patient => !activePatientIds.has(patient.nPatientId));
+    const activePatientIds = new Set(activePatients.map(patient => patient.sRecordNo));
+    const filteredFailedPatients = failedPatients.filter(patient => !activePatientIds.has(patient.sRecordNo));
 
     console.log(`Finished processing ${totalPatients} patients.`);
     console.log(`Total Active Patients: ${activePatients.length}`);

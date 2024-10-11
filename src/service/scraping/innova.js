@@ -17,6 +17,10 @@ const innovaScraping = async (document) => {
   const page = await browser.newPage();
   await page.setViewport({ width: 1920, height: 1080 });
 
+  await page.setUserAgent(
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+  );
+
   let status = "Unknown";
 
   try {
@@ -31,10 +35,10 @@ const innovaScraping = async (document) => {
     await page.type("#Answer", securityQuestion);
 
     await Promise.all([page.waitForNavigation(), page.click("#submit-button")]);
-    // si aparece este .onboarding-modal lo cierra, si no aparece, pero aparece  await page.waitForSelector('body > div.wrapper.ng-scope > header > nav > div.navbar-collapse.collapse > ul.nav.navbar-nav.ng-scope > li:nth-child(1) > ul > li > a > span'); entonces de una va al siguiente paso.
+
     await page.waitForSelector(".onboarding-modal", {
       visible: true,
-      timeout: 60000,
+      timeout: 30000,
     });
     await page.waitForFunction(
       () => {
@@ -49,7 +53,7 @@ const innovaScraping = async (document) => {
     );
 
     await page.click("#onboardingmodal-skip");
-    // pasaria diirecto a este paso si no
+
     await page.waitForSelector(
       "body > div.wrapper.ng-scope > header > nav > div.navbar-collapse.collapse > ul.nav.navbar-nav.ng-scope > li:nth-child(1) > ul > li > a > span"
     );

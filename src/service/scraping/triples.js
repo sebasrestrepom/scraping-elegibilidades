@@ -7,7 +7,7 @@ const { TRIPLES_USER_EMAIL, TRIPLES_USER_PASSWORD, TRIPLES_URL } = process.env;
 
 const triplesScraping = async (medicalPlanNumber, insuranceMedicalPlan) => {
   const sanitizedMedicalPlanNumber = medicalPlanNumber.replace(
-    /^(ZUM|ZUH)/,
+    /^(ZUM|ZUH|ZUA)/,
     ""
   );
 
