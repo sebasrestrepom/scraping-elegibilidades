@@ -9,6 +9,7 @@ const provinetScraping = async (document) => {
 
   const browser = await puppeteer.launch({
     headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
   const page = await browser.newPage();
   let status = "Unknown";
