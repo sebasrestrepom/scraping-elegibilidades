@@ -1,7 +1,6 @@
 require("dotenv").config();
 const puppeteer = require("puppeteer");
-const fs = require("fs");
-const path = require("path");
+const { uploadToDrive } = require("../../utils/upload-images-to-drive")
 
 const { USER_PROVINET, PASSWORD_PROVINET, URL_PROVINET } = process.env;
 
@@ -12,7 +11,7 @@ const provinetScraping = async (document) => {
     headless: true,
   });
   const page = await browser.newPage();
-  let status = 'Unknown';
+  let status = "Unknown";
 
   try {
     await page.goto(URL_PROVINET);
@@ -68,32 +67,8 @@ const provinetScraping = async (document) => {
 
     console.log("este es el result", textResult);
 
-    if (textResult && textResult.toLowerCase().includes('activo')) {
-      status = 'Activo';
-    }
-
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = new Intl.DateTimeFormat("en-US", { month: "long" }).format(
-      today
-    );
-    const day = today.getDate().toString().padStart(2, "0");
-
-    const yearFolder = path.join(
-      path.resolve(__dirname, "../../../"),
-      year.toString()
-    );
-
-    if (!fs.existsSync(yearFolder)) {
-      fs.mkdirSync(yearFolder);
-    }
-    const monthFolder = path.join(yearFolder, month);
-    if (!fs.existsSync(monthFolder)) {
-      fs.mkdirSync(monthFolder);
-    }
-    const dayFolder = path.join(monthFolder, day);
-    if (!fs.existsSync(dayFolder)) {
-      fs.mkdirSync(dayFolder);
+    if (textResult && textResult.toLowerCase().includes("activo")) {
+      status = "Activo";
     }
 
     await page.evaluate(async () => {
@@ -112,7 +87,18 @@ const provinetScraping = async (document) => {
       });
     });
 
-    await page.screenshot({ path: path.join(dayFolder, `${document}.png`) });
+    const screenshotBuffer = await page.screenshot({ encoding: "binary" });
+    const fileName = `${document}.png`;
+    const driveFile = await uploadToDrive(
+      fileName,
+      screenshotBuffer
+    );
+
+    if (driveFile) {
+      const driveUrl = driveFile.webViewLink;
+      console.log(`Archivo subido a Google Drive: ${driveUrl}`);
+      // Aquí puedes agregar la URL al usuario en tu base de datos o sistema.
+    }
   } catch (error) {
     console.error(
       `Error durante el proceso de scraping para el documento ${document}:`,

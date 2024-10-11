@@ -1,7 +1,6 @@
 require("dotenv").config();
 const puppeteer = require("puppeteer");
-const fs = require("fs");
-const path = require("path");
+const { uploadToDrive } = require("../../utils/upload-images-to-drive");
 
 const { TRIPLES_USER_EMAIL, TRIPLES_USER_PASSWORD, TRIPLES_URL } = process.env;
 
@@ -17,7 +16,7 @@ const triplesScraping = async (medicalPlanNumber, insuranceMedicalPlan) => {
   const page = await browser.newPage();
   await page.setViewport({ width: 1920, height: 1080 });
 
-  let status = 'Unknown';
+  let status = "Unknown";
 
   page.on("pageerror", (err) => {
     console.log(`Page error: ${err.toString()}`);
@@ -103,37 +102,17 @@ const triplesScraping = async (medicalPlanNumber, insuranceMedicalPlan) => {
     console.log("Estado del paciente:", patientStatus);
 
     if (patientStatus === "Activo") {
-      status = 'Activo';
+      status = "Activo";
 
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = new Intl.DateTimeFormat("en-US", { month: "long" }).format(
-        today
-      );
-      const day = today.getDate().toString().padStart(2, "0");
+      const screenshotBuffer = await page.screenshot({ encoding: "binary" });
+      const fileName = `${medicalPlanNumber}.png`;
+      const driveFile = await uploadToDrive(fileName, screenshotBuffer);
 
-      const yearFolder = path.join(
-        path.resolve(__dirname, "../../../"),
-        year.toString()
-      );
-
-      if (!fs.existsSync(yearFolder)) {
-        fs.mkdirSync(yearFolder);
+      if (driveFile) {
+        const driveUrl = driveFile.webViewLink;
+        console.log(`Archivo subido a Google Drive: ${driveUrl}`);
+        // Aquí puedes agregar la URL al usuario en tu base de datos o sistema.
       }
-      const monthFolder = path.join(yearFolder, month);
-      if (!fs.existsSync(monthFolder)) {
-        fs.mkdirSync(monthFolder);
-      }
-      const dayFolder = path.join(monthFolder, day);
-      if (!fs.existsSync(dayFolder)) {
-        fs.mkdirSync(dayFolder);
-      }
-
-      await page.waitForTimeout(6000);
-
-      await page.screenshot({
-        path: path.join(dayFolder, `${medicalPlanNumber}.png`),
-      });
     }
 
     await page.waitForTimeout(1000);

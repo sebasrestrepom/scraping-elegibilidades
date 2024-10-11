@@ -1,7 +1,6 @@
 require("dotenv").config();
 const puppeteer = require("puppeteer");
-const fs = require("fs");
-const path = require("path");
+const { uploadToDrive } = require("../../utils/upload-images-to-drive");
 
 const {
   USER_INNOVAMD,
@@ -18,7 +17,7 @@ const innovaScraping = async (document) => {
   await page.setViewport({ width: 1920, height: 1080 });
 
   await page.setUserAgent(
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
   );
 
   let status = "Unknown";
@@ -103,30 +102,15 @@ const innovaScraping = async (document) => {
     if (textResult) {
       status = "Activo";
 
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = new Intl.DateTimeFormat("en-US", { month: "long" }).format(
-        today
-      );
-      const day = today.getDate().toString().padStart(2, "0");
+      const screenshotBuffer = await page.screenshot({ encoding: "binary" });
+      const fileName = `${document}.png`;
+      const driveFile = await uploadToDrive(fileName, screenshotBuffer);
 
-      const yearFolder = path.join(
-        path.resolve(__dirname, "../../../"),
-        year.toString()
-      );
-      if (!fs.existsSync(yearFolder)) {
-        fs.mkdirSync(yearFolder);
+      if (driveFile) {
+        const driveUrl = driveFile.webViewLink;
+        console.log(`Archivo subido a Google Drive: ${driveUrl}`);
+        // Aquí puedes agregar la URL al usuario en tu base de datos o sistema.
       }
-      const monthFolder = path.join(yearFolder, month);
-      if (!fs.existsSync(monthFolder)) {
-        fs.mkdirSync(monthFolder);
-      }
-      const dayFolder = path.join(monthFolder, day);
-      if (!fs.existsSync(dayFolder)) {
-        fs.mkdirSync(dayFolder);
-      }
-
-      await page.screenshot({ path: path.join(dayFolder, `${document}.png`) });
     }
   } catch (error) {
     console.error(
