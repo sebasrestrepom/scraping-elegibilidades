@@ -58,6 +58,13 @@ const generateReportHTML = (activePatients, failedPatients) => {
     </li>`;
   });
 
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
   return `
     <!DOCTYPE html>
     <html>
@@ -151,7 +158,7 @@ const generateReportHTML = (activePatients, failedPatients) => {
       <body>
         <div class="container">
           <h1>Informe de Elegibilidad Diaria</h1>
-          <p>La elegibilidad para el día de hoy ha sido completada. A continuación se detalla el estado de los pacientes verificados:</p>
+          <p>La elegibilidad para el día de hoy <strong>${formattedDate}</strong> ha sido completada. A continuación se detalla el estado de los pacientes verificados:</p>
           <h2>Pacientes Activos</h2>
           <ul>
             ${activePatientsList.join('')}
