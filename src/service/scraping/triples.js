@@ -88,6 +88,10 @@ const triplesScraping = async (medicalPlanNumber, insuranceMedicalPlan) => {
 
     await page.click("#form0 > div:nth-child(4) > button");
 
+    await page.waitForTimeout(3000);
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
     await page.waitForSelector(
       "#appMain > section > section.c-patient__overview.u-grid > div:nth-child(1) > div > div.c-patient__status-wrapper > span",
       { visible: true }
