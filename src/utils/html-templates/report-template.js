@@ -30,6 +30,7 @@ const generateReportHTML = (activePatients, failedPatients) => {
         <span class="name">${patient.sRecordNo} - ${patient.PatientName}</span>
       </div>
       <div class="card-body">
+        <p><strong>Book Name:</strong> ${patient.BookName || 'No disponible'}</p>
         <p><strong>Hora Cita:</strong> ${patient.sTime}</p>
         <p><strong>Seguro:</strong> ${patient.InsuranceName}</p>
         <p><strong>Contrato:</strong> ${patient.ContractNumber}</p>
@@ -42,12 +43,13 @@ const generateReportHTML = (activePatients, failedPatients) => {
   });
 
   const failedPatientsList = sortedFailedPatients.map((patient) => {
-    const status = patient.status === "No service found" ? "Manual Verification" : patient.status;
+    const status = patient.status === "No service found" || patient.status === "Unknown" ? "Manual Verification" : patient.status;
     return `<li class="card">
       <div class="card-header">
         <span class="name">${patient.sRecordNo} - ${patient.PatientName}</span>
       </div>
       <div class="card-body">
+        <p><strong>Book Name:</strong> ${patient.BookName || 'No disponible'}</p>
         <p><strong>Hora Cita:</strong> ${patient.sTime}</p>
         <p><strong>Seguro:</strong> ${patient.InsuranceName}</p>
         <p><strong>Contrato:</strong> ${patient.ContractNumber}</p>
@@ -64,6 +66,16 @@ const generateReportHTML = (activePatients, failedPatients) => {
     month: '2-digit',
     year: 'numeric',
   });
+
+  const activePatientsSection = activePatientsList.length
+    ? `<h2>Pacientes Activos</h2>
+       <ul>${activePatientsList.join('')}</ul>`
+    : '<strong><p>No hay pacientes activos para reportar hoy.</p></strong>';
+
+  const failedPatientsSection = failedPatientsList.length
+    ? `<h2>Pacientes que requieren Verificación Manual</h2>
+       <ul>${failedPatientsList.join('')}</ul>`
+    : '<strong><p>No hay pacientes fallidos que requieran verificación manual hoy.</p></strong>';
 
   return `
     <!DOCTYPE html>
@@ -159,14 +171,8 @@ const generateReportHTML = (activePatients, failedPatients) => {
         <div class="container">
           <h1>Informe de Elegibilidad Diaria</h1>
           <p>La elegibilidad para el día de hoy <strong>${formattedDate}</strong> ha sido completada. A continuación se detalla el estado de los pacientes verificados:</p>
-          <h2>Pacientes Activos</h2>
-          <ul>
-            ${activePatientsList.join('')}
-          </ul>
-          <h2>Pacientes que requieren Verificación Manual</h2>
-          <ul>
-            ${failedPatientsList.join('')}
-          </ul>
+          ${activePatientsSection}
+          ${failedPatientsSection}
         </div>
       </body>
     </html>

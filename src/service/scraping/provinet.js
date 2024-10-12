@@ -95,6 +95,8 @@ const provinetScraping = async (document) => {
 
     await page.waitForTimeout(3000);
 
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
     const vaccinePopup = await page.waitForSelector(
       "#flu-vaccine-message-popup",
       { visible: true }
@@ -104,17 +106,23 @@ const provinetScraping = async (document) => {
       await page.click("#flu-vaccine-message-popup > button");
     }
 
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
     await page.waitForSelector("#Imprimir > div > div > div > a:nth-child(1)");
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
     const pagesBefore = await browser.pages();
 
     await page.click("#Imprimir > div > div > div > a:nth-child(1)");
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
     const pagesAfter = await browser.pages();
 
     const newPage = pagesAfter.find((p) => !pagesBefore.includes(p));
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
     if (newPage) {
       await new Promise((resolve) => setTimeout(resolve, 9000));

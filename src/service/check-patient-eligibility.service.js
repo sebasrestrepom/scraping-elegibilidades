@@ -4,8 +4,10 @@ const {
 const { innovaScraping } = require("./scraping/innova");
 const { provinetScraping } = require("./scraping/provinet");
 const { triplesScraping } = require("./scraping/triples");
-const { generateReportHTML } = require("../utils/html-templates/report-template")
-const { sendEmail } = require("../utils/send-email")
+const { generateReportHTML } = require("../utils/html-templates/report-template");
+const { sendEmail } = require("../utils/send-email");
+
+const MAX_RETRIES = 3;
 
 const checkAndProcessPatientEligibility = async () => {
   const appointmentsForToday = await findAppointmentsForToday();
@@ -14,22 +16,31 @@ const checkAndProcessPatientEligibility = async () => {
     return "No appointments scheduled for today";
   }
 
-  const scrapeEligibilityResult = await scrapeEligibilityForPatients(
-    appointmentsForToday
-  );
+  const scrapeEligibilityResult = await scrapeEligibilityForPatients(appointmentsForToday);
 
-  console.log(
-    "reporte final para mandar correo o mandar a armar correo:",
-    scrapeEligibilityResult
-  );
+  let { activePatients, failedPatients } = scrapeEligibilityResult;
 
-  const { activePatients, failedPatients } = scrapeEligibilityResult;
+  console.log("Primer intento finalizado. Pacientes fallidos:", failedPatients.length);
 
-  const reportHTML = generateReportHTML(activePatients, failedPatients);
+  let retryAttempt = 0;
 
-  await sendEmail(reportHTML);
+  while (retryAttempt < MAX_RETRIES && failedPatients.length > 0) {
+    retryAttempt++;
+    console.log(`Intento de reintento ${retryAttempt} para pacientes fallidos.`);
 
-  console.log("El reporte de elegibilidad ha sido enviado por correo.");
+    const retryResult = await scrapeEligibilityForPatients(failedPatients);
+
+    activePatients.push(...retryResult.activePatients);
+    failedPatients = retryResult.failedPatients;
+
+    console.log(
+      `Intento ${retryAttempt} finalizado. Pacientes activos adicionales: ${retryResult.activePatients.length}, Pacientes que aún fallan: ${failedPatients.length}`
+    );
+  }
+
+  const finalReportHTML = generateReportHTML(activePatients, failedPatients);
+  await sendEmail(finalReportHTML);
+  console.log("El reporte de elegibilidad final ha sido enviado por correo.");
 };
 
 const scrapeEligibilityForPatients = async (appointmentsForToday) => {
@@ -44,13 +55,13 @@ const scrapeEligibilityForPatients = async (appointmentsForToday) => {
     SSS: triplesScraping,
     TSA: triplesScraping,
     "V-SSS": triplesScraping,
+    "APS-ADV": triplesScraping,
   };
 
   const totalPatients = appointmentsForToday.length;
+  let activePatients = [];
+  let failedPatients = [];
   let processedPatients = 0;
-
-  const activePatients = [];
-  const failedPatients = [];
 
   for (const patient of appointmentsForToday) {
     processedPatients++;
@@ -85,10 +96,7 @@ const scrapeEligibilityForPatients = async (appointmentsForToday) => {
           console.log(`Patient ${patient.PatientName} is not eligible.`);
         }
       } catch (error) {
-        console.error(
-          `Error processing patient ${processedPatients} of ${totalPatients}:`,
-          error
-        );
+        console.error(`Error processing patient: ${patient.PatientName}`, error);
         failedPatients.push({
           ...patient,
           status: "Error",
@@ -96,31 +104,14 @@ const scrapeEligibilityForPatients = async (appointmentsForToday) => {
         });
       }
     } else {
-      console.log(
-        `No scraping service found for patient: ${patient.PatientName}`
-      );
+      console.log(`No scraping service found for patient: ${patient.PatientName}`);
       failedPatients.push({ ...patient, status: "No service found" });
     }
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
-  const activePatientIds = new Set(
-    activePatients.map((patient) => patient.sRecordNo)
-  );
-  const filteredFailedPatients = failedPatients.filter(
-    (patient) => !activePatientIds.has(patient.sRecordNo)
-  );
-
-  console.log(`Finished processing ${totalPatients} patients.`);
-  console.log(`Total Active Patients: ${activePatients.length}`);
-  console.log(`Total Failed Patients: ${filteredFailedPatients.length}`);
-
-  return {
-    totalProcessed: totalPatients,
-    activePatients,
-    failedPatients: filteredFailedPatients,
-  };
+  return { activePatients, failedPatients };
 };
 
 module.exports = { checkAndProcessPatientEligibility };

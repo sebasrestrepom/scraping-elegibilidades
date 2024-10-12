@@ -26,6 +26,7 @@ const innovaScraping = async (document) => {
   );
 
   let status = "Unknown";
+  let driveUrl = null;
 
   try {
     await page.goto(INNOVAMD_URL);
@@ -183,10 +184,10 @@ const innovaScraping = async (document) => {
           console.log(`PDF descargado: ${filePath}`);
 
           const pdfBuffer = fs.readFileSync(filePath);
-          const driveFile = await uploadToDrive(`${document}.pdf`, pdfBuffer);
+          driveFile = await uploadToDrive(`${document}.pdf`, pdfBuffer);
 
           if (driveFile) {
-            const driveUrl = driveFile.webViewLink;
+            driveUrl = driveFile.webViewLink;
             console.log(`PDF subido a Google Drive: ${driveUrl}`);
             fs.unlinkSync(filePath);
             return { document, status, driveUrl };
@@ -210,7 +211,7 @@ const innovaScraping = async (document) => {
     await browser.close();
   }
 
-  return { document, status };
+  return { document, status, driveUrl };
 };
 
 module.exports = { innovaScraping };
