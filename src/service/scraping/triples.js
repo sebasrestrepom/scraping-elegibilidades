@@ -1,14 +1,14 @@
 require("dotenv").config();
 const puppeteer = require("puppeteer");
+const fs = require("fs");
+const path = require("path");
 const { uploadToDrive } = require("../../utils/upload-images-to-drive");
+const axios = require("axios");
 
 const { TRIPLES_USER_EMAIL, TRIPLES_USER_PASSWORD, TRIPLES_URL } = process.env;
 
 const triplesScraping = async (medicalPlanNumber, insuranceMedicalPlan) => {
-  const sanitizedMedicalPlanNumber = medicalPlanNumber.replace(
-    /^(ZUM|ZUH|ZUA)/,
-    ""
-  );
+  const sanitizedMedicalPlanNumber = medicalPlanNumber.replace(/^(ZUM|ZUH|ZUA)/, "");
 
   const browser = await puppeteer.launch({
     headless: true,
@@ -27,25 +27,13 @@ const triplesScraping = async (medicalPlanNumber, insuranceMedicalPlan) => {
     await page.goto(TRIPLES_URL, { waitUntil: "networkidle2" });
 
     await page.waitForSelector("#cred_userid_inputtext", { visible: true });
-
-    await page.type("#cred_userid_inputtext", TRIPLES_USER_EMAIL, {
-      delay: 100,
-    });
-
-    await page.type("#cred_password_inputtext", TRIPLES_USER_PASSWORD, {
-      delay: 100,
-    });
-
+    await page.type("#cred_userid_inputtext", TRIPLES_USER_EMAIL, { delay: 100 });
+    await page.type("#cred_password_inputtext", TRIPLES_USER_PASSWORD, { delay: 100 });
     await page.click("#cred_sign_in_button");
 
-    await page.waitForSelector("#applicationMenu > li:nth-child(3) > a", {
-      visible: true,
-    });
-
+    await page.waitForSelector("#applicationMenu > li:nth-child(3) > a", { visible: true });
     await page.evaluate(() => {
-      const button = document.querySelector(
-        "#applicationMenu > li:nth-child(3) > a"
-      );
+      const button = document.querySelector("#applicationMenu > li:nth-child(3) > a");
       button.click();
     });
 
@@ -55,47 +43,32 @@ const triplesScraping = async (medicalPlanNumber, insuranceMedicalPlan) => {
 
     await page.click("#lobModalBtn");
 
-    await page.waitForSelector(
-      "#formAudienceSelect > div.c-modal__body > div.c-audience__selection > div > div.col-md-12",
-      { visible: true }
-    );
-
+    await page.waitForSelector("#formAudienceSelect > div.c-modal__body > div.c-audience__selection > div > div.col-md-12", { visible: true });
     await page.waitForTimeout(3000);
 
     if (insuranceMedicalPlan === "TSA") {
-      await page.click(
-        "#formAudienceSelect > div.c-modal__body > div.c-audience__selection > div > div.col-md-12 > label:nth-child(1)"
-      );
+      await page.click("#formAudienceSelect > div.c-modal__body > div.c-audience__selection > div > div.col-md-12 > label:nth-child(1)");
     } else if (insuranceMedicalPlan === "V-SSS") {
-      await page.click(
-        "#formAudienceSelect > div.c-modal__body > div.c-audience__selection > div > div.col-md-12 > label:nth-child(2)"
-      );
+      await page.click("#formAudienceSelect > div.c-modal__body > div.c-audience__selection > div > div.col-md-12 > label:nth-child(2)");
     } else if (insuranceMedicalPlan === "SSS") {
-      await page.click(
-        "#formAudienceSelect > div.c-modal__body > div.c-audience__selection > div > div.col-md-12 > label:nth-child(3)"
-      );
+      await page.click("#formAudienceSelect > div.c-modal__body > div.c-audience__selection > div > div.col-md-12 > label:nth-child(3)");
     }
 
     await page.waitForTimeout(3000);
 
     await page.click("#js-selectAudienceBtn");
-
     await page.waitForSelector("#txtMemberId", { visible: true });
 
     await page.waitForTimeout(3000);
 
     await page.type("#txtMemberId", sanitizedMedicalPlanNumber, { delay: 100 });
-
     await page.click("#form0 > div:nth-child(4) > button");
 
     await page.waitForTimeout(3000);
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    await page.waitForSelector(
-      "#appMain > section > section.c-patient__overview.u-grid > div:nth-child(1) > div > div.c-patient__status-wrapper > span",
-      { visible: true }
-    );
+    await page.waitForSelector("#appMain > section > section.c-patient__overview.u-grid > div:nth-child(1) > div > div.c-patient__status-wrapper > span", { visible: true });
 
     await page.waitForTimeout(3000);
 
@@ -109,24 +82,44 @@ const triplesScraping = async (medicalPlanNumber, insuranceMedicalPlan) => {
     if (patientStatus === "Activo") {
       status = "Activo";
 
-      const screenshotBuffer = await page.screenshot({ encoding: "binary" });
-      const fileName = `${medicalPlanNumber}.png`;
-      const driveFile = await uploadToDrive(fileName, screenshotBuffer);
+      await new Promise((resolve) => setTimeout(resolve, 15000));
 
-      if (driveFile) {
-        const driveUrl = driveFile.webViewLink;
-        console.log(`Archivo subido a Google Drive: ${driveUrl}`);
-        return { medicalPlanNumber, status, driveUrl };
+      await page.waitForSelector("#appMain > header > a.c-button.is-txtHidden-xs.c-button__secondary.has-icon", { visible: true });
+
+      await new Promise((resolve) => setTimeout(resolve, 15000));
+      const pdfUrl = await page.evaluate(() => {
+        const printButton = document.querySelector("#appMain > header > a.c-button.is-txtHidden-xs.c-button__secondary.has-icon");
+        return printButton ? printButton.href : null;
+      });
+
+      if (pdfUrl) {
+        const cookies = await page.cookies();
+        const cookieHeader = cookies.map(cookie => `${cookie.name}=${cookie.value}`).join("; ");
+
+        const pdfResponse = await axios.get(pdfUrl, {
+          headers: {
+            Cookie: cookieHeader,
+          },
+          responseType: "arraybuffer",
+        });
+
+        const fileName = `${medicalPlanNumber}.pdf`;
+        const filePath = path.join(__dirname, fileName);
+        fs.writeFileSync(filePath, pdfResponse.data);
+
+        const driveFile = await uploadToDrive(fileName, pdfResponse.data);
+        if (driveFile) {
+          const driveUrl = driveFile.webViewLink;
+          console.log(`PDF subido a Google Drive: ${driveUrl}`);
+          fs.unlinkSync(filePath);
+          return { medicalPlanNumber, status, driveUrl };
+        }
+      } else {
+        console.error("No se encontró la URL del PDF.");
       }
-
     }
-
-    await page.waitForTimeout(1000);
   } catch (error) {
-    console.error(
-      `Error durante el proceso de scraping para el documento ${medicalPlanNumber}:`,
-      error
-    );
+    console.error(`Error durante el proceso de scraping para el documento ${medicalPlanNumber}:`, error);
   } finally {
     await browser.close();
   }

@@ -1,5 +1,8 @@
 require("dotenv").config();
 const puppeteer = require("puppeteer");
+const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 const { uploadToDrive } = require("../../utils/upload-images-to-drive");
 
 const {
@@ -14,6 +17,7 @@ const innovaScraping = async (document) => {
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
+
   const page = await browser.newPage();
   await page.setViewport({ width: 1920, height: 1080 });
 
@@ -40,6 +44,7 @@ const innovaScraping = async (document) => {
       visible: true,
       timeout: 30000,
     });
+
     await page.waitForFunction(
       () => {
         const modal = document.querySelector(".onboarding-modal");
@@ -70,6 +75,7 @@ const innovaScraping = async (document) => {
       "body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div > form > div > input",
       { visible: true }
     );
+
     await page.type(
       "body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div > form > div > input",
       `${document}`
@@ -103,15 +109,97 @@ const innovaScraping = async (document) => {
     if (textResult) {
       status = "Activo";
 
-      const screenshotBuffer = await page.screenshot({ encoding: "binary" });
-      const fileName = `${document}.png`;
-      const driveFile = await uploadToDrive(fileName, screenshotBuffer);
+      await page.waitForSelector(
+        "body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div > div.panel.panel-default.ng-scope > div > div",
+        { visible: true, timeout: 3000 }
+      );
+      await new Promise((resolve) => setTimeout(resolve, 5000));
 
-      if (driveFile) {
-        const driveUrl = driveFile.webViewLink;
-        console.log(`Archivo subido a Google Drive: ${driveUrl}`);
-        return { document, status, driveUrl };
-      }
+      await page.click(
+        "body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div > div.panel.panel-default.ng-scope > div > div"
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+
+      await page.waitForSelector(
+        "body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div.ng-scope > div > div:nth-child(1) > ul",
+        { visible: true, timeout: 10000 }
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+
+      await page.setRequestInterception(true);
+
+      let realToken = null;
+      page.on('request', async (request) => {
+        const url = request.url();
+        if (url.includes("/print")) {
+          console.log(`Interceptada la solicitud de impresión: ${url}`);
+
+          const authData = await page.evaluate(() => {
+            const authInfo = JSON.parse(
+              sessionStorage.getItem('oidc.user:https://account.innovamd.com/:innovamd.web')
+            );
+            return authInfo ? authInfo.access_token : null;
+          });
+
+          if (!authData) {
+            throw new Error("No se pudo extraer el token de autenticación.");
+          }
+
+          const responseToken = await axios({
+            url: url,
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${authData}`,
+            }
+          });
+
+          realToken = responseToken.data;
+          console.log(`Real token: ${realToken}`);
+
+          const pdfUrl = `https://providerapi.innovamd.com/mmmpr/api/document/${realToken}/print`;
+
+          console.log(`URL del PDF formada: ${pdfUrl}`);
+
+          const filePath = path.join(__dirname, `${document}.pdf`);
+          const response = await axios({
+            url: pdfUrl,
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${authData}`,
+            },
+            responseType: 'stream',
+          });
+
+          const file = fs.createWriteStream(filePath);
+          response.data.pipe(file);
+
+          await new Promise((resolve, reject) => {
+            file.on('finish', resolve);
+            file.on('error', reject);
+          });
+
+          console.log(`PDF descargado: ${filePath}`);
+
+          const pdfBuffer = fs.readFileSync(filePath);
+          const driveFile = await uploadToDrive(`${document}.pdf`, pdfBuffer);
+
+          if (driveFile) {
+            const driveUrl = driveFile.webViewLink;
+            console.log(`PDF subido a Google Drive: ${driveUrl}`);
+            fs.unlinkSync(filePath);
+            return { document, status, driveUrl };
+          }
+        }
+        request.continue();
+      });
+
+      await page.click(
+        "body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div.ng-scope > div > div:nth-child(1) > ul"
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 10000));
     }
   } catch (error) {
     console.error(

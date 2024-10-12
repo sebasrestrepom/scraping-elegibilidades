@@ -37,10 +37,23 @@ const getOrCreateFolder = async (name, parentId = null) => {
   return folder.data.id;
 };
 
-const uploadToDrive = async (fileName, screenshotBuffer) => {
-  try {
-    const drive = google.drive({ version: 'v3', auth });
+const getMimeType = (fileName) => {
+  const ext = path.extname(fileName).toLowerCase();
+  switch (ext) {
+    case '.png':
+      return 'image/png';
+    case '.jpg':
+    case '.jpeg':
+      return 'image/jpeg';
+    case '.pdf':
+      return 'application/pdf';
+    default:
+      return 'application/octet-stream';
+  }
+};
 
+const uploadToDrive = async (fileName, fileBuffer) => {
+  try {
     const today = new Date();
     const year = today.getFullYear();
     const month = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(today);
@@ -52,7 +65,9 @@ const uploadToDrive = async (fileName, screenshotBuffer) => {
     const dayFolderId = await getOrCreateFolder(day, monthFolderId);
 
     const tempFilePath = path.join(__dirname, fileName);
-    fs.writeFileSync(tempFilePath, screenshotBuffer);
+    fs.writeFileSync(tempFilePath, fileBuffer);
+
+    const mimeType = getMimeType(fileName);
 
     const fileMetadata = {
       name: fileName,
@@ -60,7 +75,7 @@ const uploadToDrive = async (fileName, screenshotBuffer) => {
     };
 
     const media = {
-      mimeType: 'image/png',
+      mimeType,
       body: fs.createReadStream(tempFilePath),
     };
 

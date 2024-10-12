@@ -1,6 +1,6 @@
 require("dotenv").config();
 const puppeteer = require("puppeteer");
-const { uploadToDrive } = require("../../utils/upload-images-to-drive")
+const { uploadToDrive } = require("../../utils/upload-images-to-drive");
 
 const { USER_PROVINET, PASSWORD_PROVINET, URL_PROVINET } = process.env;
 
@@ -88,17 +88,52 @@ const provinetScraping = async (document) => {
       });
     });
 
-    const screenshotBuffer = await page.screenshot({ encoding: "binary" });
-    const fileName = `${document}.png`;
-    const driveFile = await uploadToDrive(
-      fileName,
-      screenshotBuffer
+    await page.waitForSelector(
+      "#DataGridTable > tbody > tr > td.col-md-1 > div > a"
+    );
+    await page.click("#DataGridTable > tbody > tr > td.col-md-1 > div > a");
+
+    await page.waitForTimeout(3000);
+
+    const vaccinePopup = await page.waitForSelector(
+      "#flu-vaccine-message-popup",
+      { visible: true }
     );
 
-    if (driveFile) {
-      const driveUrl = driveFile.webViewLink;
-      console.log(`Archivo subido a Google Drive: ${driveUrl}`);
-      return { document, status, driveUrl };
+    if (vaccinePopup) {
+      await page.click("#flu-vaccine-message-popup > button");
+    }
+
+    await page.waitForSelector("#Imprimir > div > div > div > a:nth-child(1)");
+
+    const pagesBefore = await browser.pages();
+
+    await page.click("#Imprimir > div > div > div > a:nth-child(1)");
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const pagesAfter = await browser.pages();
+
+    const newPage = pagesAfter.find((p) => !pagesBefore.includes(p));
+
+    if (newPage) {
+      await new Promise((resolve) => setTimeout(resolve, 9000));
+
+      const screenshotBuffer = await newPage.screenshot({
+        fullPage: true,
+        encoding: "binary",
+      });
+
+      const fileName = `${document}.png`;
+      const driveFile = await uploadToDrive(fileName, screenshotBuffer);
+
+      if (driveFile) {
+        const driveUrl = driveFile.webViewLink;
+        console.log(`Archivo subido a Google Drive: ${driveUrl}`);
+        return { document, status, driveUrl };
+      }
+    } else {
+      console.error("No se pudo abrir la nueva página.");
     }
   } catch (error) {
     console.error(
