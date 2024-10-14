@@ -2,6 +2,7 @@ const {
   findAppointmentsForToday,
 } = require("../repository/find-appointments-for-today.repository");
 const { innovaScraping } = require("./scraping/innova");
+const { firstMedicalScraping } = require("./scraping/first-medical");
 const { provinetScraping } = require("./scraping/provinet");
 const { triplesScraping } = require("./scraping/triples");
 const { generateReportHTML } = require("../utils/html-templates/report-template");
@@ -56,6 +57,7 @@ const scrapeEligibilityForPatients = async (appointmentsForToday) => {
     TSA: triplesScraping,
     "V-SSS": triplesScraping,
     "APS-ADV": triplesScraping,
+    "APS-FMV": firstMedicalScraping,
   };
 
   const totalPatients = appointmentsForToday.length;
