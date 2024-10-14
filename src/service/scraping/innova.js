@@ -81,12 +81,17 @@ const innovaScraping = async (document) => {
       "body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div > form > div > input",
       `${document}`
     );
+
+    await new Promise((resolve) => setTimeout(resolve, 9000));
+
     await page.click(
       "body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div > form > div > div > button"
     );
 
     let textResult;
     try {
+      await new Promise((resolve) => setTimeout(resolve, 9000));
+
       await page.waitForSelector(
         "body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div > div.panel.panel-default.ng-scope > div > div > div.media-body.allow-overflow > div > div.col-xs-6.col-sm-2.col-lg-2.col-sm-text-right > h3",
         { visible: true, timeout: 3000 }
