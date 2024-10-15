@@ -23,8 +23,8 @@ const generateReportHTML = (activePatients, failedPatients) => {
 
   const activePatientsList = sortedActivePatients.map((patient) => {
     const imageLink = patient.urlImage
-      ? `<a href="${patient.urlImage}" target="_blank">Ver Imagen</a>`
-      : "Sin imagen disponible";
+      ? `<a href="${patient.urlImage}" target="_blank">Ver Documento</a>`
+      : "Sin documento disponible";
     return `<li class="card">
       <div class="card-header">
         <span class="name">${patient.sRecordNo} - ${patient.PatientName}</span>
