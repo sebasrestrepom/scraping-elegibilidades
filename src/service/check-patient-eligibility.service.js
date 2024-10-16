@@ -86,7 +86,7 @@ const scrapeEligibilityForPatients = async (appointmentsForToday) => {
           result = await scrapingFunction(patient.ContractNumber);
         }
 
-        if (result.status === "Activo") {
+        if (result.status === "Activo" && result.driveUrl) {
           const patientData = {
             ...patient,
             status: result.status,
