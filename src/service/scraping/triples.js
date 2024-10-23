@@ -44,7 +44,7 @@ const triplesScraping = async (medicalPlanNumber, insuranceMedicalPlan) => {
     await page.click("#lobModalBtn");
 
     await page.waitForSelector("#formAudienceSelect > div.c-modal__body > div.c-audience__selection > div > div.col-md-12", { visible: true });
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(6000);
 
     if (insuranceMedicalPlan === "TSA" || insuranceMedicalPlan === "APS-ADV") {
       await page.click("#formAudienceSelect > div.c-modal__body > div.c-audience__selection > div > div.col-md-12 > label:nth-child(1)");
@@ -54,23 +54,23 @@ const triplesScraping = async (medicalPlanNumber, insuranceMedicalPlan) => {
       await page.click("#formAudienceSelect > div.c-modal__body > div.c-audience__selection > div > div.col-md-12 > label:nth-child(3)");
     }
 
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(6000);
 
     await page.click("#js-selectAudienceBtn");
     await page.waitForSelector("#txtMemberId", { visible: true });
 
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(6000);
 
     await page.type("#txtMemberId", sanitizedMedicalPlanNumber, { delay: 100 });
     await page.click("#form0 > div:nth-child(4) > button");
 
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(6000);
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 9000));
 
     await page.waitForSelector("#appMain > section > section.c-patient__overview.u-grid > div:nth-child(1) > div > div.c-patient__status-wrapper > span", { visible: true });
 
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(6000);
 
     const patientStatus = await page.evaluate(() => {
       const statusElement = document.querySelector(".c-patient__status");
