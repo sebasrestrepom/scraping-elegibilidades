@@ -51,6 +51,7 @@ const scrapeEligibilityForPatients = async (appointmentsForToday) => {
     MMM: innovaScraping,
     PMC: innovaScraping,
     "V-MMM": innovaScraping,
+    MMM2: innovaScraping,
     MCSC: provinetScraping,
     MCSL: provinetScraping,
     SSS: triplesScraping,

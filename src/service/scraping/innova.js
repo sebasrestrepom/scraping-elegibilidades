@@ -117,22 +117,22 @@ const innovaScraping = async (document) => {
 
       await page.waitForSelector(
         "body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div > div.panel.panel-default.ng-scope > div > div",
-        { visible: true, timeout: 3000 }
+        { visible: true, timeout: 9000 }
       );
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 9000));
 
       await page.click(
         "body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div > div.panel.panel-default.ng-scope > div > div"
       );
 
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 9000));
 
       await page.waitForSelector(
         "body > div.wrapper.ng-scope > section > div > section > div > div > div > div > div.ng-scope > div > div:nth-child(1) > ul",
         { visible: true, timeout: 10000 }
       );
 
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 9000));
 
       await page.setRequestInterception(true);
 
