@@ -62,6 +62,9 @@ const triplesScraping = async (medicalPlanNumber, insuranceMedicalPlan) => {
     await page.waitForTimeout(6000);
 
     await page.type("#txtMemberId", sanitizedMedicalPlanNumber, { delay: 100 });
+
+    await new Promise((resolve) => setTimeout(resolve, 6000));
+
     await page.click("#form0 > div:nth-child(4) > button");
 
     await page.waitForTimeout(9000);
