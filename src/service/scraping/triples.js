@@ -46,7 +46,7 @@ const triplesScraping = async (medicalPlanNumber, insuranceMedicalPlan) => {
     await page.waitForSelector("#formAudienceSelect > div.c-modal__body > div.c-audience__selection > div > div.col-md-12", { visible: true });
     await page.waitForTimeout(6000);
 
-    if (insuranceMedicalPlan === "TSA" || insuranceMedicalPlan === "APS-ADV") {
+    if (insuranceMedicalPlan === "TSA" || insuranceMedicalPlan === "APS-ADV" || insuranceMedicalPlan === "APS-TSA") {
       await page.click("#formAudienceSelect > div.c-modal__body > div.c-audience__selection > div > div.col-md-12 > label:nth-child(1)");
     } else if (insuranceMedicalPlan === "V-SSS" || insuranceMedicalPlan === "APS-TSV") {
       await page.click("#formAudienceSelect > div.c-modal__body > div.c-audience__selection > div > div.col-md-12 > label:nth-child(2)");
