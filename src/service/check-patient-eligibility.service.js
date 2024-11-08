@@ -58,6 +58,8 @@ const scrapeEligibilityForPatients = async (appointmentsForToday) => {
     TSA: triplesScraping,
     "V-SSS": triplesScraping,
     "APS-ADV": triplesScraping,
+    "APS-TSA": triplesScraping,
+    "APS-TSV": triplesScraping,
     "APS-TSV": triplesScraping,
     "APS-FMV": firstMedicalScraping,
   };
